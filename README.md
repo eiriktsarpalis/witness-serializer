@@ -7,7 +7,7 @@ The [Serde.NET](https://github.com/serdedotnet/serde) and [PolyType](https://git
 To give a more concrete example, let's consider a hypothetical interface that lets you serialize .NET values:
 
 ```csharp
-public interface IJsonSerializer<T>
+public interface IJsonSerializable<T>
 {    
     static abstract void Write(Utf8JsonWriter writer, T? value);
     static abstract T? Read(ref Utf8JsonReader reader);
@@ -40,7 +40,7 @@ And then `TWitness` just becomes a class that a source generator can dump implem
 ```csharp
 MyJsonSerializer.Deserialize<int, Witness>("42");
 
-class Witness : IJsonSerializer<int>, IJsonSerializer<string>, IJsonSerializer<SomePoco>, ...
+class Witness : IJsonSerializable<int>, IJsonSerializable<string>, IJsonSerializable<SomePoco>, ...
 { 
     /* ... */
 }
@@ -49,8 +49,8 @@ class Witness : IJsonSerializer<int>, IJsonSerializer<string>, IJsonSerializer<S
 It's a viable workaround, but obviously the ergonomics of it aren't great from a user perspective. It gets even more finicky if you need to deal with generic types, a canonical implementation for say `List<T>` would need to look as follows:
 
 ```csharp
-public class ListSerializer<T, TWitness> : IJsonSerializer<List<T>>
-    where TWitness : IJsonSerializer<T>
+public class ListSerializer<T, TWitness> : IJsonSerializable<List<T>>
+    where TWitness : IJsonSerializable<T>
 {
    /* ... */
 }
