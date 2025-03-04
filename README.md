@@ -41,8 +41,10 @@ And then `TWitness` just becomes a class that a source generator can dump implem
 MyJsonSerializer.Deserialize<int, Witness>("42");
 
 class Witness : IJsonSerializable<int>, IJsonSerializable<string>, IJsonSerializable<SomePoco>, ...
-{ 
-    /* ... */
+{
+    static void IJsonSerializable<int>.Write(Utf8JsonWriter writer, int value) => ...
+    static void IJsonSerializable<string>.Write(Utf8JsonWriter writer, string? value) => ...
+    static void IJsonSerializable<SomePoco>.Write(Utf8JsonWriter writer, SomePoco? value) => ...
 }
 ```
 
@@ -52,7 +54,21 @@ It's a viable workaround, but obviously the ergonomics of it aren't great from a
 public class ListSerializer<T, TWitness> : IJsonSerializable<List<T>>
     where TWitness : IJsonSerializable<T>
 {
-   /* ... */
+    static void IJsonSerializable<List<T>>.Write(Utf8JsonWriter writer, List<T>? value)
+    {
+        if (value is null)
+        {
+            writer.WriteNullValue();
+            return;
+        }
+
+        writer.WriteStartArray();
+        foreach (T item in value)
+        {
+            TWitness.Write(writer, item);
+        }
+        writer.WriteEndArray();
+    }
 }
 ```
 
